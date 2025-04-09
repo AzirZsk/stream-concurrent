@@ -36,7 +36,7 @@ public class Main {
     @Setup
     public void setup() {
         fooList = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 50; i++) {
             fooList.add(new Foo());
         }
         // 10核心线程 200最大线程 60秒超时 任务满时，重复尝试添加
@@ -67,6 +67,13 @@ public class Main {
     }
 
     @Benchmark
+    public void executor() {
+        for (Foo foo : fooList) {
+            executorService.execute(foo::init);
+        }
+    }
+
+    @Benchmark
     public void normalCompletableFuture() {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (Foo foo : fooList) {
@@ -74,6 +81,12 @@ public class Main {
             futures.add(future);
         }
         futures.forEach(CompletableFuture::join);
+    }
+
+    @Benchmark
+    public void streamForEach() {
+        fooList.stream()
+                .forEach(v -> executorService.execute(v::init));
     }
 
     @Benchmark
